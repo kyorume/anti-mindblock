@@ -1,0 +1,44 @@
+name: Build with Nuitka and Update Beta Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Запускать сборку только при создании тега, например, v0.0.2
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'  # Укажите версию Python, которую вы используете
+
+    - name: Install Nuitka
+      run: pip install nuitka
+
+    - name: Build with Nuitka
+      run: nuitka --standalone --onefile --output-dir=build main.py
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: build
+        path: build/
+
+    - name: Update Beta Release
+      uses: softprops/action-gh-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Токен для доступа к GitHub API
+      with:
+        tag_name: Beta  # Используем существующий тег Beta
+        name: Beta Release
+        body: |
+          Автоматически обновленный релиз для тега Beta.
+          Собранный билд доступен ниже.
+        prerelease: true  # Пометить как пре-релиз (Beta)
+        files: |
+          build/main.bin  # Укажите путь к вашему собранному файлу
